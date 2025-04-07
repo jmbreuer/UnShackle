@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
     internal lateinit var router: Router
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.i("Unshackle.MainActivity", "onCreate");
+        Log.i("Unshackle.MainActivity", "onCreate")
         super.onCreate(savedInstanceState)
         router = Router(applicationContext)
         if (intent != null)
@@ -37,9 +37,9 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
-        Log.i("Unshackle.MainActivity", "onNewIntent");
+        Log.i("Unshackle.MainActivity", "onNewIntent")
         super.onNewIntent(intent)
-        val url = fromIntent(intent);
+        val url = fromIntent(intent)
         setContent {
             Content(url)
         }
@@ -48,15 +48,15 @@ class MainActivity : ComponentActivity() {
             // https://stackoverflow.com/a/30172792
 
             Log.i("Unshackle.MainActivity", "routing $url")
-            CoroutineScope(Dispatchers.IO).launch() {
+            CoroutineScope(Dispatchers.IO).launch {
                 val image = router.handle(url)
                 Log.i("Unshackle.MainActivity", "sharing $image")
                 if (image != null) {
                     val i = Intent(Intent.ACTION_SEND)
                     i.setType("image/*")
-                    i.putExtra(Intent.EXTRA_STREAM, image);
+                    i.putExtra(Intent.EXTRA_STREAM, image)
                     withContext(Dispatchers.Main) {
-                        startActivity(Intent.createChooser(i, "Share unshackled image"));
+                        startActivity(Intent.createChooser(i, "Share unshackled image"))
                     }
                 }
             }
