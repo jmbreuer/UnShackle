@@ -1,12 +1,11 @@
 package net.jmbreuer.unshackle
 
+// import androidx.activity.enableEdgeToEdge
 import android.content.Intent
 import android.os.Bundle
-import android.os.StrictMode
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-// import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -14,13 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.runInterruptible
-import net.jmbreuer.unshackle.Router
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.jmbreuer.unshackle.ui.theme.UnShackleTheme
-import java.net.URL
 
 class MainActivity : ComponentActivity() {
     internal lateinit var router: Router
@@ -47,27 +44,21 @@ class MainActivity : ComponentActivity() {
             Content(url)
         }
         if (url.startsWith("http")) {
-            // FIXME get out of my fucking hair for now
-            // StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().permitAll().build());
+            // the one and only sane description on how to share an image:
+            // https://stackoverflow.com/a/30172792
 
-            // runBlocking {
-               //  val deferred = async<URL?>(Dispatchers.IO) {
-                    Log.i("Unshackle.MainActivity", "routing $url")
-            runBlocking() {
+            Log.i("Unshackle.MainActivity", "routing $url")
+            CoroutineScope(Dispatchers.IO).launch() {
                 val image = router.handle(url)
-                /*
-                    image
-                }
-                val image = deferred.await()
-             */
                 Log.i("Unshackle.MainActivity", "sharing $image")
                 if (image != null) {
                     val i = Intent(Intent.ACTION_SEND)
                     i.setType("image/*")
                     i.putExtra(Intent.EXTRA_STREAM, image);
-                    startActivity(Intent.createChooser(i, "Share unshackled image"));
+                    withContext(Dispatchers.Main) {
+                        startActivity(Intent.createChooser(i, "Share unshackled image"));
+                    }
                 }
-                // }
             }
         }
     }
