@@ -2,17 +2,23 @@ package net.jmbreuer.unshackle
 
 // import androidx.activity.enableEdgeToEdge
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,20 +35,14 @@ class MainActivity : ComponentActivity() {
         if (intent != null)
             onNewIntent(intent)
         // enableEdgeToEdge()
-        /*
-        setContent {
-            Content("<no data>")
-        }
-        */
     }
 
     override fun onNewIntent(intent: Intent) {
         Log.i("Unshackle.MainActivity", "onNewIntent")
         super.onNewIntent(intent)
         val url = fromIntent(intent)
-        setContent {
-            Content(url)
-        }
+        setContent { Content(url, null) }
+        
         if (url.startsWith("http")) {
             // the one and only sane description on how to share an image:
             // https://stackoverflow.com/a/30172792
@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
                     i.setType("image/*")
                     i.putExtra(Intent.EXTRA_STREAM, image)
                     withContext(Dispatchers.Main) {
+                        setContent { Content(url, image) }
                         startActivity(Intent.createChooser(i, "Share unshackled image"))
                     }
                 }
@@ -64,13 +65,16 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun Content(input: String) {
+    fun Content(url: String, image: Uri?) {
         UnShackleTheme {
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                Greeting(
-                    input = input,
-                    modifier = Modifier.padding(innerPadding)
-                )
+            val padding = 16.dp
+            Column(modifier = Modifier.fillMaxSize(1f).padding(padding)) {
+                Spacer(modifier = Modifier.padding(padding))
+                Greeting(text = url)
+                Spacer(modifier = Modifier.padding(padding))
+                ImagePreview(image = image,
+                    modifier = Modifier.fillMaxWidth(1f))
+                Spacer(modifier = Modifier.fillMaxHeight(1f))
             }
         }
     }
@@ -82,26 +86,27 @@ fun fromIntent(intent: Intent): String {
         Intent.ACTION_SEND ->
             if (intent.type == "text/plain") {
                 intent.getStringExtra(Intent.EXTRA_TEXT)
-            } else {
-                "<type ${intent.type} not supported>"
-            }
+            } else "<type ${intent.type} not supported>"
 
         Intent.ACTION_VIEW -> if (intent.scheme.orEmpty().startsWith("http")) {
             intent.dataString
-        } else {
-            "<scheme ${intent.scheme} not supported>"
-        }
+        } else "<scheme ${intent.scheme} not supported>"
 
         else -> "<no matching intent>"
     }.toString() // TODO hualp
 }
 
 @Composable
-fun Greeting(input: String, modifier: Modifier = Modifier) {
+fun Greeting(text: String, modifier: Modifier = Modifier) {
     Text(
-        text = "Input: $input!",
+        text = text,
         modifier = modifier
     )
+}
+
+@Composable
+fun ImagePreview(image: Uri?, modifier: Modifier = Modifier) {
+    AsyncImage(model = image, contentDescription = image.toString(), modifier = modifier)
 }
 
 @Preview(showBackground = true)
